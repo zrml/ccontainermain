@@ -3,13 +3,11 @@
 The program `ccontainermain` allows a Caché, Ensemble or HealthShare product to run in a Docker container.
 Docker containers need a PID 1 or main process to hold up the container. This is what `ccontainermain` provides.
 It is developed so that one can quickly work with Caché in a Docker container vs 
--having to understand why the container dies straight away and 
--having to develop a comprehensive script.
+* having to understand why the container dies straight away and 
+* having to develop a comprehensive script.
 
 The name convention used is that of InterSystems commands found in the <installDir>/bin directory like:
-ccontrol
-cstart
-cforce etc.
+ccontrol, cstart, cforce etc.
  
 `ccontainermain` is called to run as the main process of a Docker container.
 One would copy it in the container and specify it as the Dockerfile ENTRYPOINT argument, as the command to run. See Docker documentation on Dockerfile declarative manifesto.
@@ -62,5 +60,4 @@ HTH
 ## TODO
 * investigate SIGCHLD for dying processes and clean up PID table
 * Windows/Azure support and testing
---
 
