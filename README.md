@@ -48,7 +48,7 @@ and for the rest see
 [the Docker documentation] (https://docs.docker.com/)
 
 Please note that I've left in a debug (dbg) constant that you can use to get extra debugging information throughout the program.
-For your convenience a linux executable has been provided so that you don' thave to install GO and compile the code.
+For your convenience a linux executable has been provided so that you don't have to install GO and compile the code.
 If you have GO installed simply
 
 	$ go build ccontainermain.go
