@@ -1,6 +1,6 @@
 /*
  +--------------------------------------------------------------------------------+
- | 2015-05 Luca Ravazzolo - initially created to support a containerized Caché
+ | 2015-05 Luca R - initially created to support a containerized Caché
  |
  |
  +--------------------------------------------------------------------------------+
