@@ -54,7 +54,7 @@ If you have GO installed simply
 	$ go build ccontainermain.go
 
 
-Please also note the dockerfile/ directory under which I'll try to upload few Dockerfile examples. Dockerfiles are Docker engine manifests that allows one to autoamte Docker images creation.
+Please also note the dockerfile/ directory under which I'll try to upload few useful Dockerfile examples. Dockerfiles are Docker engine manifests that allows one to automate Docker images creation.
 
 HTH
 
