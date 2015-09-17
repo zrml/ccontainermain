@@ -10,12 +10,18 @@ The name convention used is that of InterSystems commands found in the <installD
 ccontrol, cstart, cforce etc.
  
 `ccontainermain` is called to run as the main process of a Docker container.
-One would copy it in the container and specify it as the Dockerfile ENTRYPOINT argument, as the command to run. See Docker documentation on Dockerfile declarative manifesto.
+One would copy it in the container and specify it as program to run when issuing a 'docker run' command. Alternatively, when using a dockerfile manifesto you would specify `ccontainermain` as the ENTRYPOINT command argument. See Docker documentation on Dockerfile declarative manifesto. The typical string found at the end of a Dockerfile would look like:
 
-`ccontainermain` start Caché|Enseble|HealthShare and logs any message and issues to the standard Docker logs output.
+`ENTRYPOINT  ["/ccontainermain"]` 
+
+Please see the dockerfile examples in the [dockerfile] folder above.
+
+`ccontainermain` start Caché|Ensemble|HealthShare and logs any message and issues to the standard Docker logs output.
 It also tries to tune shared memory so that Caché may start. You can pass higher value than the default 512MB that is usually enough to work.
 
 `ccontainermain` also allows a software developer to start her or his Caché program and also other services.
+here is an example of the syntax on how to fire up a container created via a Dockerfile -with the ENTRYPOINT specified as above, which wraps the call to a java service needed for the app:
+`$ docker run -p 57772:57772 centos7:C153 -xstart=/myExtraService.sh` 
 
 However, the most important thing that ccontainermain does is probably the trapping of signals to the container.
 Consider the Docker command:
