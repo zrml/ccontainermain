@@ -20,7 +20,8 @@ Please see the dockerfile examples in the [dockerfile] folder above.
 It also tries to tune shared memory so that Caché may start. You can pass higher value than the default 512MB that is usually enough to work.
 
 `ccontainermain` also allows a software developer to start her or his Caché program and also other services.
-here is an example of the syntax on how to fire up a container created via a Dockerfile -with the ENTRYPOINT specified as above, which wraps the call to a java service needed for the app:
+Here is an example of the syntax on how to fire up a container created via a Dockerfile -with the ENTRYPOINT specified as above, which wraps the call to a java service needed for the app:
+
 `$ docker run -p 57772:57772 centos7:C153 -xstart=/myExtraService.sh` 
 
 However, the most important thing that ccontainermain does is probably the trapping of signals to the container.
