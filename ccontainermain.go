@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/hpcloud/tail"
 )
 
 const (
@@ -77,6 +79,47 @@ func setSharedMemSeg(shmmaxVal int) (bool, error) {
 	return true, nil
 }
 
+func getInstanceFolder(inst string) string {
+	var folder string
+	cmd := "ccontrol"
+	args := []string{"qlist", inst}
+
+	// Output runs the command and returns its standard output
+	if out, err := exec.Command(cmd, args...).Output(); err != nil {
+		log.Printf("Error while getting Cachéinstallation folders\n")
+		log.Printf("ERR: %s.", err)
+		os.Exit(1)
+
+	} else {
+		// ccontrol qlist string examples:
+		// C151^/usr/cachesys^2015.1.0.429.0^running, since Mon Jun  8 12:00:30 2015^cache.cpf^1972^57772^62972^warn^
+		// CACHE142^/Users/CACHE142^2014.2.0.177.0^sign-on inhibited, last used Mon Jun  8 11:31:37 2015^cache.cpf^1972^57772^62972^
+		// C151^/usr/cachesys^2015.1.0.429.0^down, last used Mon Jun  8 16:40:07 2015^cache.cpf^1972^57772^62972^^
+		qlistStr := string(out)
+		if qlistStr == "" {
+			log.Printf("Error: Cannot continue as qlistStr from 'ccontrol qlist <instance>' is empty")
+			os.Exit(1)
+		}
+
+		// parsing the returned string; they're all []string...
+		folder = strings.SplitN(qlistStr, "^", 4)[1]
+	}
+
+	return folder
+}
+
+func tailCConsoleLog(inst string) {
+	folder := getInstanceFolder(inst)
+	if t, err := tail.TailFile(folder + "/mgr/cconsole.log", tail.Config{Follow: true}); err != nil {
+		log.Printf("Error while getting content for cconsole.log\n")
+		log.Printf("ERR: %s.\n", err)
+	} else {
+		for line := range t.Lines {
+			fmt.Println(line.Text)
+		}
+	}
+}
+
 // starting Caché
 //
 func startCaché(inst string, nostu bool) (bool, error) {
@@ -94,6 +137,8 @@ func startCaché(inst string, nostu bool) (bool, error) {
 	if dbg {
 		log.Printf("Caché start cmd: %s %q", cmd, args)
 	}
+
+	go tailCConsoleLog(inst)
 
 	c := exec.Command(cmd, args...)
 
