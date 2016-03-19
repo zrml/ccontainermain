@@ -79,6 +79,7 @@ func setSharedMemSeg(shmmaxVal int) (bool, error) {
 	return true, nil
 }
 
+// returns instalation folder for given instance
 func getInstanceFolder(inst string) string {
 	var folder string
 	cmd := "ccontrol"
@@ -108,6 +109,7 @@ func getInstanceFolder(inst string) string {
 	return folder
 }
 
+// shows all new lines in cconsole.log
 func tailCConsoleLog(inst string) {
 	folder := getInstanceFolder(inst)
 	if t, err := tail.TailFile(folder + "/mgr/cconsole.log", tail.Config{Follow: true}); err != nil {
@@ -122,7 +124,7 @@ func tailCConsoleLog(inst string) {
 
 // starting Caché
 //
-func startCaché(inst string, nostu bool) (bool, error) {
+func startCaché(inst string, nostu bool, cclog bool) (bool, error) {
 	log.Printf("Starting Caché...\n")
 
 	// building the start string
@@ -138,7 +140,9 @@ func startCaché(inst string, nostu bool) (bool, error) {
 		log.Printf("Caché start cmd: %s %q", cmd, args)
 	}
 
-	go tailCConsoleLog(inst)
+	if cclog {
+		go tailCConsoleLog(inst)
+	}
 
 	c := exec.Command(cmd, args...)
 
@@ -475,6 +479,7 @@ func main() {
 	pFstart := flag.Bool("cstart", true, "Allows container to come up without (false) starting Caché or initialising shmem")
 	pFnostu := flag.Bool("nostu", false, "Allows cstart to run with the nostu option for maintenance, single user access mode.")
 	pFshmem := flag.Int("shmem", 512, "Shared Mem segment max size in MB; default value=512MB enough to install and play")
+	pFlog := flag.Bool("cconsole", false, "Allows to show cconsole.log in current output.")
 
 	// user option to start other services he might need (sshd, whatever...)
 	pFexeStart := flag.String("xstart", "", "Allows startup eXecution of other services or processes via a single <myStart_shell_script.sh>")
@@ -491,6 +496,7 @@ func main() {
 	cstart := *pFstart
 	nostu := *pFnostu
 	shmem := *pFshmem
+	cclog := *pFlog
 	exeStart := *pFexeStart
 	exeStop := *pFexeStop
 	ver := *pVersion
@@ -533,7 +539,7 @@ func main() {
 
 		// 1.2--
 		// starting Caché
-		_, err := startCaché(inst, nostu)
+		_, err := startCaché(inst, nostu, cclog)
 		if err != nil {
 			log.Printf("\nError starting up Caché: %s\n", err)
 			os.Exit(1)
