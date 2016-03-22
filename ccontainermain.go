@@ -112,7 +112,8 @@ func getInstanceFolder(inst string) string {
 // shows all new lines in cconsole.log
 func tailCConsoleLog(inst string) {
 	folder := getInstanceFolder(inst)
-	if t, err := tail.TailFile(folder + "/mgr/cconsole.log", tail.Config{Follow: true}); err != nil {
+	endLocation := tail.SeekInfo{Offset: 0, Whence: os.SEEK_END}
+	if t, err := tail.TailFile(folder+"/mgr/cconsole.log", tail.Config{Follow: true, Location: &endLocation}); err != nil {
 		log.Printf("Error while getting content for cconsole.log\n")
 		log.Printf("ERR: %s.\n", err)
 	} else {
