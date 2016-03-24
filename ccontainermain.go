@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/hpcloud/tail"
 )
 
 const (
@@ -77,9 +79,53 @@ func setSharedMemSeg(shmmaxVal int) (bool, error) {
 	return true, nil
 }
 
+// returns instalation folder for given instance
+func getInstanceFolder(inst string) string {
+	var folder string
+	cmd := "ccontrol"
+	args := []string{"qlist", inst}
+
+	// Output runs the command and returns its standard output
+	if out, err := exec.Command(cmd, args...).Output(); err != nil {
+		log.Printf("Error while getting Cachéinstallation folders\n")
+		log.Printf("ERR: %s.", err)
+		os.Exit(1)
+
+	} else {
+		// ccontrol qlist string examples:
+		// C151^/usr/cachesys^2015.1.0.429.0^running, since Mon Jun  8 12:00:30 2015^cache.cpf^1972^57772^62972^warn^
+		// CACHE142^/Users/CACHE142^2014.2.0.177.0^sign-on inhibited, last used Mon Jun  8 11:31:37 2015^cache.cpf^1972^57772^62972^
+		// C151^/usr/cachesys^2015.1.0.429.0^down, last used Mon Jun  8 16:40:07 2015^cache.cpf^1972^57772^62972^^
+		qlistStr := string(out)
+		if qlistStr == "" {
+			log.Printf("Error: Cannot continue as qlistStr from 'ccontrol qlist <instance>' is empty")
+			os.Exit(1)
+		}
+
+		// parsing the returned string; they're all []string...
+		folder = strings.SplitN(qlistStr, "^", 4)[1]
+	}
+
+	return folder
+}
+
+// shows all new lines in cconsole.log
+func tailCConsoleLog(inst string) {
+	folder := getInstanceFolder(inst)
+	endLocation := tail.SeekInfo{Offset: 0, Whence: os.SEEK_END}
+	if t, err := tail.TailFile(folder+"/mgr/cconsole.log", tail.Config{Follow: true, Location: &endLocation}); err != nil {
+		log.Printf("Error while getting content for cconsole.log\n")
+		log.Printf("ERR: %s.\n", err)
+	} else {
+		for line := range t.Lines {
+			fmt.Println(line.Text)
+		}
+	}
+}
+
 // starting Caché
 //
-func startCaché(inst string, nostu bool) (bool, error) {
+func startCaché(inst string, nostu bool, cclog bool) (bool, error) {
 	log.Printf("Starting Caché...\n")
 
 	// building the start string
@@ -93,6 +139,10 @@ func startCaché(inst string, nostu bool) (bool, error) {
 
 	if dbg {
 		log.Printf("Caché start cmd: %s %q", cmd, args)
+	}
+
+	if cclog {
+		go tailCConsoleLog(inst)
 	}
 
 	c := exec.Command(cmd, args...)
@@ -430,6 +480,7 @@ func main() {
 	pFstart := flag.Bool("cstart", true, "Allows container to come up without (false) starting Caché or initialising shmem")
 	pFnostu := flag.Bool("nostu", false, "Allows cstart to run with the nostu option for maintenance, single user access mode.")
 	pFshmem := flag.Int("shmem", 512, "Shared Mem segment max size in MB; default value=512MB enough to install and play")
+	pFlog := flag.Bool("cconsole", false, "Allows to show cconsole.log in current output.")
 
 	// user option to start other services he might need (sshd, whatever...)
 	pFexeStart := flag.String("xstart", "", "Allows startup eXecution of other services or processes via a single <myStart_shell_script.sh>")
@@ -446,6 +497,7 @@ func main() {
 	cstart := *pFstart
 	nostu := *pFnostu
 	shmem := *pFshmem
+	cclog := *pFlog
 	exeStart := *pFexeStart
 	exeStop := *pFexeStop
 	ver := *pVersion
@@ -488,7 +540,7 @@ func main() {
 
 		// 1.2--
 		// starting Caché
-		_, err := startCaché(inst, nostu)
+		_, err := startCaché(inst, nostu, cclog)
 		if err != nil {
 			log.Printf("\nError starting up Caché: %s\n", err)
 			os.Exit(1)
