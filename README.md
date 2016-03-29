@@ -43,6 +43,8 @@ Docker gives a 10 seconds default and then bring the container down. Not ideal f
 * -cstart it's a boolean defaulted to true; It gives us the option to start a container without starting Caché; -cstart=true
 * -cstop it's a boolean defaulted to true; it gives the option to skip the Caché shutdown; -cstop=false
 * -nostu it's a boolean defaulted to false; it allows DB single user startup for maintenance mode 
+* -cconsole it's a boolean defaulted to false; it shows Caché cconsole.log output in the container logs output
+* -version shows ccontainer version
 
 The above flags can also be retrieved via
 

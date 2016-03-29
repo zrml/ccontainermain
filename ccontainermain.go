@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	version         = "0.4"
+	version         = "0.5"
 	dbg             = false
 	k316            = 3.16 // the kernel version that allows containers to use more useful ssmmmax seg value
 	pre316MaxShmall = 8192
@@ -172,9 +172,9 @@ func startCaché(inst string, nostu bool, cclog bool) (bool, error) {
 }
 
 // check if cstart or cstop were successfull
-// what =	what we are checking:
-//			"up" checks for successful Caché start-up
-// 			"down" checks for successful Caché shutdown
+// what = what we are checking:
+//		"up" checks for successful Caché start-up
+// 		"down" checks for successful Caché shutdown
 //
 func checkCmdOutcome(what string, inst string) error {
 	cmd := "ccontrol"
@@ -510,6 +510,7 @@ func main() {
 		log.Printf("flag cstart: %t\n", cstart)
 		log.Printf("flag nostu: %t\n", nostu)
 		log.Printf("flag shmem: %d\n", shmem)
+		log.Printf("flag cconsole: %d\n", cclog)
 		log.Printf("flag xstart: %s\n", exeStart)
 		log.Printf("flag xstop: %s\n", exeStop)
 		log.Printf("flag v: %s\n", ver)
@@ -597,7 +598,7 @@ func main() {
 
 	// Block until a signal is received_____________
 	sig := <-cSig
-	log.Printf("Signal trapped: %s; %d\n", sig, sig)
+	log.Printf("Signal trapped; sig. %s; %d\n", sig, sig)
 
 	// if SIG*... received then run shutdown
 
