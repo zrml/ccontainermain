@@ -34,7 +34,7 @@ WORKDIR ${TMP_INSTALL_DIR}
 ADD cache-2015.1.0.429.0-lnxrhx64.tar.gz .
 
 # update OS + dependencies & run Caché silent install___________________________________
-RUN yum -y update && yum -y install tar hostname net-tools && ln -sf /etc/locatime /usr/share/zoneinfo/Europe/Rome &&./cinstall_silent
+RUN yum -y update && yum -y install tar hostname net-tools && ln -sf /etc/localtime /usr/share/zoneinfo/Europe/Rome &&./cinstall_silent
 COPY cache.key $ISC_PACKAGE_INSTALLDIR/mgr/
 RUN ccontrol stop $ISC_PACKAGE_INSTANCENAME quietly 
 
