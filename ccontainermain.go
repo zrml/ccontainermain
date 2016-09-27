@@ -10,6 +10,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -214,6 +215,7 @@ func checkCmdOutcome(what string, inst string) error {
 			log.Printf("Something is preventing Caché from starting in multi-user mode,\n")
 			log.Printf("You might want to start the container with the flag -cstart=false to fix it.\n")
 
+			return errors.New("sign-on inhibited")
 		} else {
 			log.Printf("Un-recognized Caché status while trying to verify its '%s' status\n", what)
 			log.Printf("-qlist string = %s.\n", qlistStr)
@@ -510,10 +512,10 @@ func main() {
 		log.Printf("flag cstart: %t\n", cstart)
 		log.Printf("flag nostu: %t\n", nostu)
 		log.Printf("flag shmem: %d\n", shmem)
-		log.Printf("flag cconsole: %d\n", cclog)
+		log.Printf("flag cconsole: %t\n", cclog)
 		log.Printf("flag xstart: %s\n", exeStart)
 		log.Printf("flag xstop: %s\n", exeStop)
-		log.Printf("flag v: %s\n", ver)
+		log.Printf("flag v: %t\n", ver)
 
 		log.Printf("command supplied: %q\n", flag.Args())
 		log.Printf("--\n")
@@ -621,7 +623,7 @@ func main() {
 	if exeStop != "" {
 		_, err := stopExtraService(exeStop)
 		if err != nil {
-			log.Printf("\nError shutting down eXtra service: %s; err: \n", exeStop, err)
+			log.Printf("\nError shutting down eXtra service: %s; err: %s\n", exeStop, err)
 			os.Exit(1)
 		} else {
 			log.Printf("eXtra service down.\n")
