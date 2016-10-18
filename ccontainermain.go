@@ -126,7 +126,7 @@ func tailCConsoleLog(inst string) {
 
 // starting Caché
 //
-func startCaché(inst string, nostu bool, cclog bool) (bool, error) {
+func startCaché(inst string, nostu bool, cclog bool, fail bool) (bool, error) {
 	log.Printf("Starting Caché...\n")
 
 	// building the start string
@@ -164,7 +164,7 @@ func startCaché(inst string, nostu bool, cclog bool) (bool, error) {
 	}
 
 	// check that the start-up was successful
-	if err := checkCmdOutcome("up", inst); err != nil {
+	if err := checkCmdOutcome("up", inst, fail); err != nil {
 		log.Printf("Error: Caché was not brought up successfully.\n")
 		os.Exit(1)
 	}
@@ -177,7 +177,7 @@ func startCaché(inst string, nostu bool, cclog bool) (bool, error) {
 //		"up" checks for successful Caché start-up
 // 		"down" checks for successful Caché shutdown
 //
-func checkCmdOutcome(what string, inst string) error {
+func checkCmdOutcome(what string, inst string, fail bool) error {
 	cmd := "ccontrol"
 	args := []string{"qlist", inst}
 
@@ -215,7 +215,9 @@ func checkCmdOutcome(what string, inst string) error {
 			log.Printf("Something is preventing Caché from starting in multi-user mode,\n")
 			log.Printf("You might want to start the container with the flag -cstart=false to fix it.\n")
 
-			return errors.New("sign-on inhibited")
+			if fail == true {
+				return errors.New("sign-on inhibited")
+			}
 		} else {
 			log.Printf("Un-recognized Caché status while trying to verify its '%s' status\n", what)
 			log.Printf("-qlist string = %s.\n", qlistStr)
@@ -269,7 +271,7 @@ func shutdownCaché(inst string) (bool, error) {
 	}
 
 	// check that the shutdown was successful
-	if err := checkCmdOutcome("down", inst); err != nil {
+	if err := checkCmdOutcome("down", inst, false); err != nil {
 		log.Printf("Error: Caché was not shutdown successfully.\n")
 		os.Exit(1)
 	}
@@ -483,6 +485,7 @@ func main() {
 	pFnostu := flag.Bool("nostu", false, "Allows cstart to run with the nostu option for maintenance, single user access mode.")
 	pFshmem := flag.Int("shmem", 512, "Shared Mem segment max size in MB; default value=512MB enough to install and play")
 	pFlog := flag.Bool("cconsole", false, "Allows to show cconsole.log in current output.")
+	pFail := flag.Bool("fail-if-troubled", false, "Container will fail if server does not start correctly")
 
 	// user option to start other services he might need (sshd, whatever...)
 	pFexeStart := flag.String("xstart", "", "Allows startup eXecution of other services or processes via a single <myStart_shell_script.sh>")
@@ -500,6 +503,7 @@ func main() {
 	nostu := *pFnostu
 	shmem := *pFshmem
 	cclog := *pFlog
+	fail := *pFail
 	exeStart := *pFexeStart
 	exeStop := *pFexeStop
 	ver := *pVersion
@@ -513,6 +517,7 @@ func main() {
 		log.Printf("flag nostu: %t\n", nostu)
 		log.Printf("flag shmem: %d\n", shmem)
 		log.Printf("flag cconsole: %t\n", cclog)
+		log.Printf("flag fail-if-troubled: %t\n", fail)
 		log.Printf("flag xstart: %s\n", exeStart)
 		log.Printf("flag xstop: %s\n", exeStop)
 		log.Printf("flag v: %t\n", ver)
@@ -543,7 +548,7 @@ func main() {
 
 		// 1.2--
 		// starting Caché
-		_, err := startCaché(inst, nostu, cclog)
+		_, err := startCaché(inst, nostu, cclog, fail)
 		if err != nil {
 			log.Printf("\nError starting up Caché: %s\n", err)
 			os.Exit(1)
