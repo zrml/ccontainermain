@@ -48,6 +48,13 @@ COPY cache.key $ISC_PACKAGE_INSTALLDIR/mgr/
 ENV WRC_USERNAME=""
 ENV WRC_PASSWORD=""
 
+# Workaround for an overlayfs bug which prevents Cache from starting with <PROTECT> errors
+COPY ccontrol-wrapper.sh /usr/bin/
+RUN cd /usr/bin                     && \
+    rm ccontrol                     && \
+    mv ccontrol-wrapper.sh ccontrol && \
+    chmod 555 ccontrol
+
 # TCP sockets that can be accessed if user wants to (see 'docker run -p' flag)
 EXPOSE 57772 1972 22
 
