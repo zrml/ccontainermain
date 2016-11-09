@@ -19,27 +19,35 @@ MAINTAINER user <user@company.com>
 #
 ENV TMP_INSTALL_DIR=/tmp/distrib
 
+# vars to get the Cache kit from WRC Distribution
+ENV WRC_USERNAME="user@company.com"
+ENV WRC_PASSWORD="your_password_here"
+
 # vars for Caché silent install
 ENV ISC_PACKAGE_INSTANCENAME="CACHE"
 ENV ISC_PACKAGE_INSTALLDIR="/usr/cachesys"
 ENV ISC_PACKAGE_UNICODE="Y"
 
 # Caché distribution file________________________________________________________________
-# set-up and install Caché from distrib_tmp dir 
-# -container bloating here; no volumes dismount yet! (https://github.com/docker/docker/issues/14080 and similar)
+# set-up and install Caché from distrib_tmp dir
 RUN mkdir ${TMP_INSTALL_DIR}
 WORKDIR ${TMP_INSTALL_DIR}
 
-# fetch distrib file
-ADD cache-2016.2.0.736.0-lnxrhx64.tar.gz .
-
 # update OS + dependencies & run Caché silent install___________________________________
 RUN yum -y update && \
-    yum -y install tar hostname net-tools which && \
+    yum -y install tar hostname net-tools which wget && \
     ln -sf /etc/localtime /usr/share/zoneinfo/Europe/Rome && \
+    wget -qO /dev/null --keep-session-cookies --save-cookies /dev/stdout --post-data="UserName=$WRC_USERNAME&Password=$WRC_PASSWORD" 'https://login.intersystems.com/login/SSO.UI.Login.cls?referrer=https%253A//wrc.intersystems.com/wrc/login.csp' \
+      | wget -O - --load-cookies /dev/stdin 'https://wrc.intersystems.com/wrc/WRC.StreamServer.cls?FILE=/wrc/distrib/cache-2016.2.0.736.0-lnxrhx64.tar.gz' \
+        | tar xvfzC - . && \
     ./cache-*/cinstall_silent && \
+    rm -rf ${TMP_INSTALL_DIR}/* && \
     ccontrol stop $ISC_PACKAGE_INSTANCENAME quietly 
 COPY cache.key $ISC_PACKAGE_INSTALLDIR/mgr/
+
+# Clear sensitive credentials so they don't leak into the image itself
+ENV WRC_USERNAME=""
+ENV WRC_PASSWORD=""
 
 # TCP sockets that can be accessed if user wants to (see 'docker run -p' flag)
 EXPOSE 57772 1972 22
