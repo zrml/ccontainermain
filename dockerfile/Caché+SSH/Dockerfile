@@ -36,7 +36,6 @@ WORKDIR ${TMP_INSTALL_DIR}
 # update OS + dependencies & run Caché silent install___________________________________
 RUN yum -y update && \
     yum -y install tar hostname net-tools which wget && \
-    ln -sf /etc/localtime /usr/share/zoneinfo/Europe/Rome && \
     wget -qO /dev/null --keep-session-cookies --save-cookies /dev/stdout --post-data="UserName=$WRC_USERNAME&Password=$WRC_PASSWORD" 'https://login.intersystems.com/login/SSO.UI.Login.cls?referrer=https%253A//wrc.intersystems.com/wrc/login.csp' \
       | wget -O - --load-cookies /dev/stdin 'https://wrc.intersystems.com/wrc/WRC.StreamServer.cls?FILE=/wrc/distrib/cache-2016.2.0.736.0-lnxrhx64.tar.gz' \
         | tar xvfzC - . && \
