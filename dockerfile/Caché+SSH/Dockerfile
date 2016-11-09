@@ -1,10 +1,10 @@
 # This Docker manifest file builds a container with:
 # - sshd running (linux containers don't usually have it)
-# - Caché 2015.1 and 
+# - Caché 2016.2 and 
 # - it handles container PID 1 via ccontainermain which offers various flags
 #
 # build the new image with:
-# $ docker build --force-rm --no-cache -t centos7:C151 .
+# $ docker build --force-rm --no-cache -t cache:2016.2 .
 #--
 
 # pull from this repository
@@ -20,7 +20,7 @@ MAINTAINER user <user@company.com>
 ENV TMP_INSTALL_DIR=/tmp/distrib
 
 # vars for Caché silent install
-ENV ISC_PACKAGE_INSTANCENAME="C151"
+ENV ISC_PACKAGE_INSTANCENAME="CACHE"
 ENV ISC_PACKAGE_INSTALLDIR="/usr/cachesys"
 ENV ISC_PACKAGE_UNICODE="Y"
 
@@ -31,13 +31,13 @@ RUN mkdir ${TMP_INSTALL_DIR}
 WORKDIR ${TMP_INSTALL_DIR}
 
 # fetch distrib file
-ADD cache-2015.1.0.429.0-lnxrhx64.tar.gz .
+ADD cache-2016.2.0.736.0-lnxrhx64.tar.gz .
 
 # update OS + dependencies & run Caché silent install___________________________________
 RUN yum -y update && \
-    yum -y install tar hostname net-tools && \
+    yum -y install tar hostname net-tools which && \
     ln -sf /etc/localtime /usr/share/zoneinfo/Europe/Rome && \
-    ./cinstall_silent && \
+    ./cache-*/cinstall_silent && \
     ccontrol stop $ISC_PACKAGE_INSTANCENAME quietly 
 COPY cache.key $ISC_PACKAGE_INSTALLDIR/mgr/
 
@@ -51,7 +51,7 @@ ADD ccontainermain .
 ENTRYPOINT  ["/ccontainermain"]
 
 # run via:
-# docker run -d -p 57772:57772 -p 2222:22 -e ROOT_PASS="linux" <docker_image_id> -i=C151 -xstart=/run.sh 
+# docker run -d -p 57772:57772 -p 2222:22 -e ROOT_PASS="linux" <docker_image_id> -i=CACHE -xstart=/run.sh 
 #
 # more options & explinations
 # $ docker run -d			// detached in the background; accessed only via network
@@ -63,7 +63,7 @@ ENTRYPOINT  ["/ccontainermain"]
 # <docker_image_id> 		// see docker images to fetch the right name & tag or id
 # 							// after the Docker image id, we can specify all the flags supported by 'ccontainermain'
 #							// see this page for more info https://github.com/zrml/ccontainermain
-# -i=C151					// this is the Cachè instance name
+# -i=CACHE					// this is the Cachè instance name
 # -xstart=/run.sh			// eXecute another service at startup time
 #							// run.sh starts sshd (part of tutum centos container)
 #							// for more info see https://docs.docker.com/reference/run/
