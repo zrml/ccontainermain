@@ -1,10 +1,10 @@
 # This Docker manifest file builds a container with:
 # - sshd running (linux containers don't usually have it)
-# - Caché 2015.1 and 
+# - Caché 2016.2 and 
 # - it handles container PID 1 via ccontainermain which offers various flags
 #
 # build the new image with:
-# $ docker build --force-rm --no-cache -t centos7:C151 .
+# $ docker build --force-rm --no-cache -t cache:2016.2 .
 #--
 
 # pull from this repository
@@ -19,27 +19,41 @@ MAINTAINER user <user@company.com>
 #
 ENV TMP_INSTALL_DIR=/tmp/distrib
 
+# vars to get the Cache kit from WRC Distribution
+ENV WRC_USERNAME="user@company.com"
+ENV WRC_PASSWORD="your_password_here"
+
 # vars for Caché silent install
-ENV ISC_PACKAGE_INSTANCENAME="C151"
+ENV ISC_PACKAGE_INSTANCENAME="CACHE"
 ENV ISC_PACKAGE_INSTALLDIR="/usr/cachesys"
 ENV ISC_PACKAGE_UNICODE="Y"
 
 # Caché distribution file________________________________________________________________
-# set-up and install Caché from distrib_tmp dir 
-# -container bloating here; no volumes dismount yet! (https://github.com/docker/docker/issues/14080 and similar)
+# set-up and install Caché from distrib_tmp dir
 RUN mkdir ${TMP_INSTALL_DIR}
 WORKDIR ${TMP_INSTALL_DIR}
 
-# fetch distrib file
-ADD cache-2015.1.0.429.0-lnxrhx64.tar.gz .
-
 # update OS + dependencies & run Caché silent install___________________________________
 RUN yum -y update && \
-    yum -y install tar hostname net-tools && \
-    ln -sf /etc/localtime /usr/share/zoneinfo/Europe/Rome && \
-    ./cinstall_silent && \
+    yum -y install tar hostname net-tools which wget java && \
+    wget -qO /dev/null --keep-session-cookies --save-cookies /dev/stdout --post-data="UserName=$WRC_USERNAME&Password=$WRC_PASSWORD" 'https://login.intersystems.com/login/SSO.UI.Login.cls?referrer=https%253A//wrc.intersystems.com/wrc/login.csp' \
+      | wget -O - --load-cookies /dev/stdin 'https://wrc.intersystems.com/wrc/WRC.StreamServer.cls?FILE=/wrc/distrib/cache-2016.2.0.736.0-lnxrhx64.tar.gz' \
+        | tar xvfzC - . && \
+    ./cache-*/cinstall_silent && \
+    rm -rf ${TMP_INSTALL_DIR}/* && \
     ccontrol stop $ISC_PACKAGE_INSTANCENAME quietly 
 COPY cache.key $ISC_PACKAGE_INSTALLDIR/mgr/
+
+# Clear sensitive credentials so they don't leak into the image itself
+ENV WRC_USERNAME=""
+ENV WRC_PASSWORD=""
+
+# Workaround for an overlayfs bug which prevents Cache from starting with <PROTECT> errors
+COPY ccontrol-wrapper.sh /usr/bin/
+RUN cd /usr/bin                     && \
+    rm ccontrol                     && \
+    mv ccontrol-wrapper.sh ccontrol && \
+    chmod 555 ccontrol
 
 # TCP sockets that can be accessed if user wants to (see 'docker run -p' flag)
 EXPOSE 57772 1972 22
@@ -51,7 +65,7 @@ ADD ccontainermain .
 ENTRYPOINT  ["/ccontainermain"]
 
 # run via:
-# docker run -d -p 57772:57772 -p 2222:22 -e ROOT_PASS="linux" <docker_image_id> -i=C151 -xstart=/run.sh 
+# docker run -d -p 57772:57772 -p 2222:22 -e ROOT_PASS="linux" <docker_image_id> -i=CACHE -xstart=/run.sh 
 #
 # more options & explinations
 # $ docker run -d			// detached in the background; accessed only via network
@@ -63,7 +77,7 @@ ENTRYPOINT  ["/ccontainermain"]
 # <docker_image_id> 		// see docker images to fetch the right name & tag or id
 # 							// after the Docker image id, we can specify all the flags supported by 'ccontainermain'
 #							// see this page for more info https://github.com/zrml/ccontainermain
-# -i=C151					// this is the Cachè instance name
+# -i=CACHE					// this is the Cachè instance name
 # -xstart=/run.sh			// eXecute another service at startup time
 #							// run.sh starts sshd (part of tutum centos container)
 #							// for more info see https://docs.docker.com/reference/run/
