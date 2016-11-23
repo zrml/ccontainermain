@@ -485,7 +485,7 @@ func main() {
 	pFnostu := flag.Bool("nostu", false, "Allows cstart to run with the nostu option for maintenance, single user access mode.")
 	pFshmem := flag.Int("shmem", 512, "Shared Mem segment max size in MB; default value=512MB enough to install and play")
 	pFlog := flag.Bool("cconsole", false, "Allows to show cconsole.log in current output.")
-	pFail := flag.Bool("fail-if-troubled", false, "Container will fail if server does not start correctly")
+	pFail := flag.Bool("fail-if-troubled", false, "Container will fail if Caché does not start correctly")
 
 	// user option to start other services he might need (sshd, whatever...)
 	pFexeStart := flag.String("xstart", "", "Allows startup eXecution of other services or processes via a single <myStart_shell_script.sh>")
