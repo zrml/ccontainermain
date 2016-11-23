@@ -19,10 +19,6 @@ MAINTAINER user <user@company.com>
 #
 ENV TMP_INSTALL_DIR=/tmp/distrib
 
-# vars to get the Cache kit from WRC Distribution
-ENV WRC_USERNAME="user@company.com"
-ENV WRC_PASSWORD="your_password_here"
-
 # vars for Caché silent install
 ENV ISC_PACKAGE_INSTANCENAME="CACHE"
 ENV ISC_PACKAGE_INSTALLDIR="/usr/cachesys"
@@ -36,17 +32,25 @@ WORKDIR ${TMP_INSTALL_DIR}
 # update OS + dependencies & run Caché silent install___________________________________
 RUN yum -y update && \
     yum -y install tar hostname net-tools which wget java && \
-    wget -qO /dev/null --keep-session-cookies --save-cookies /dev/stdout --post-data="UserName=$WRC_USERNAME&Password=$WRC_PASSWORD" 'https://login.intersystems.com/login/SSO.UI.Login.cls?referrer=https%253A//wrc.intersystems.com/wrc/login.csp' \
-      | wget -O - --load-cookies /dev/stdin 'https://wrc.intersystems.com/wrc/WRC.StreamServer.cls?FILE=/wrc/distrib/cache-2016.2.0.736.0-lnxrhx64.tar.gz' \
-        | tar xvfzC - . && \
+
+# Replace the following location with that of your Cache 2016.2 kit
+    wget -O - 'https://replace_this_with_your_server/distrib/cache-2016.2.0.736.0-lnxrhx64.tar.gz' \
+
+# Alternatively, if you're comfortable with all parties with access to to this docker image having
+# access to these WRC credentials via the `docker history` command, comment out the above line,
+# uncomment the following lines and fill in your WRC_USERNAME and WRC_PASSWORD to automatically
+# fetch the kit from InterSystems' WRC.
+ 
+#    WRC_USERNAME="user@company.com" && \
+#    WRC_PASSWORD="your_password_here" && \
+#      wget -qO /dev/null --keep-session-cookies --save-cookies /dev/stdout --post-data="UserName=$WRC_USERNAME&Password=$WRC_PASSWORD" 'https://login.intersystems.com/login/SSO.UI.Login.cls?referrer=https%253A//wrc.intersystems.com/wrc/login.csp' \
+#        | wget -O - --load-cookies /dev/stdin 'https://wrc.intersystems.com/wrc/WRC.StreamServer.cls?FILE=/wrc/distrib/cache-2016.2.0.736.0-lnxrhx64.tar.gz' \
+
+      | tar xvfzC - . && \
     ./cache-*/cinstall_silent && \
     rm -rf ${TMP_INSTALL_DIR}/* && \
     ccontrol stop $ISC_PACKAGE_INSTANCENAME quietly 
 COPY cache.key $ISC_PACKAGE_INSTALLDIR/mgr/
-
-# Clear sensitive credentials so they don't leak into the image itself
-ENV WRC_USERNAME=""
-ENV WRC_PASSWORD=""
 
 # Workaround for an overlayfs bug which prevents Cache from starting with <PROTECT> errors
 COPY ccontrol-wrapper.sh /usr/bin/
