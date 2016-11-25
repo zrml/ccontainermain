@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	version         = "0.5"
+	version         = "0.6"
 	dbg             = false
 	k316            = 3.16 // the kernel version that allows containers to use more useful ssmmmax seg value
 	pre316MaxShmall = 8192
