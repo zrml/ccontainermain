@@ -38,8 +38,8 @@ Docker gives a 10 seconds default and then bring the container down. Not ideal f
 * -n for namespace; it allows to specify the namespace where to run a program; -n=USER
 * -r for routine; it allows to specify the routine name to start; -r=myApp or -r="##class(package.class).method()"
 * -shmem for tuning SHMMAX; default val 512MB; -shmem=1024
-* -xstart for eXecuting something else (example starting sshd etc.); -xstart=/usr/local/bin/runMyExtraServive.sh
-* -xstop for eXectuing a stop of a started service; -xstop=/bringAllMyProcsDown.sh
+* -xstart for eXecuting something else before Caché is started; -xstart=/myapp/runMyExtraServive.sh
+* -xstop for eXectuing a stop of a started service after Caché; -xstop=/bringAllMyProcsDown.sh
 * -cstart it's a boolean defaulted to true; It gives us the option to start a container without starting Caché; -cstart=true
 * -cstop it's a boolean defaulted to true; it gives the option to skip the Caché shutdown; -cstop=false
 * -nostu it's a boolean defaulted to false; it allows DB single user startup for maintenance mode 
