@@ -38,6 +38,9 @@ const (
 //
 // shmmaxVal param supplied in MB; however it's applied in bytes
 //
+// ** TODO:
+// 1) we should make sure we can use hugepages so that memory structures are pinned to memory...
+//
 func setSharedMemSeg(shmmaxVal int) (bool, error) {
 	if dbg {
 		log.Printf("Setting shmmax; param shmmaxVal=%d\n", shmmaxVal)
