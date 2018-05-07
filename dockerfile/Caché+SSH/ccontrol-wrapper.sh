@@ -2,7 +2,10 @@
 
 # Work around a werid overlayfs bug where files don't open properly if they haven't been
 # touched first - see the yum-ovl plugin for a similar workaround
-if [ "${1,,}" == "start" ]; then
+df / | grep -q overlay
+filesystemIsOverlay=$?
+
+if [ "${1,,}" == "start" ] && [ $filesystemIsOverlay -eq 0 ]; then
     find / -name CACHE.DAT -exec touch {} \;
 fi
 
