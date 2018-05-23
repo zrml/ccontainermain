@@ -491,7 +491,8 @@ func main() {
 	pFail := flag.Bool("fail-if-troubled", false, "Container will fail if Caché does not start correctly")
 
 	// user option to start other services he might need (sshd, whatever...)
-	pFexeStart := flag.String("xstart", "", "Allows startup eXecution of other services or processes via a single <myStart_shell_script.sh>")
+	pFexePreStart := flag.String("xprestart", "", "Allows startup eXecution of other services or processes via a single <myStart_shell_script.sh>, called before Caché starts")
+	pFexeStart := flag.String("xstart", "", "Allows startup eXecution of other services or processes via a single <myStart_shell_script.sh>, called after Caché starts")
 	pFexeStop := flag.String("xstop", "", "Allows stop eXecution of other services or processes via a single <myStop_shell_script.sh>")
 
 	pVersion := flag.Bool("version", false, "prints version")
@@ -507,6 +508,7 @@ func main() {
 	shmem := *pFshmem
 	cclog := *pFlog
 	fail := *pFail
+	exePreStart := *pFexePreStart
 	exeStart := *pFexeStart
 	exeStop := *pFexeStop
 	ver := *pVersion
@@ -521,6 +523,7 @@ func main() {
 		log.Printf("flag shmem: %d\n", shmem)
 		log.Printf("flag cconsole: %t\n", cclog)
 		log.Printf("flag fail-if-troubled: %t\n", fail)
+		log.Printf("flag xprestart: %s\n", exePreStart)
 		log.Printf("flag xstart: %s\n", exeStart)
 		log.Printf("flag xstop: %s\n", exeStop)
 		log.Printf("flag v: %t\n", ver)
@@ -534,6 +537,23 @@ func main() {
 	if ver == true {
 		fmt.Printf("ccontainermain Version %s\n", version)
 		os.Exit(0)
+	}
+
+	// allow other services to run before Cache starts
+	//
+	if exePreStart != "" {
+		var exeOK bool
+
+		chExeCheck := make(chan bool)
+		go startExtraService(exePreStart, chExeCheck)
+
+		exeOK = <-chExeCheck
+
+		if exeOK != true {
+			log.Printf("Error starting eXtra pre-start service '%s'", exeStart)
+		} else {
+			log.Printf("eXtra pre-start service is up.")
+		}
 	}
 
 	// 1--
