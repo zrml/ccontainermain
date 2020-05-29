@@ -431,12 +431,14 @@ func startExtraService(exeCmd string, exeOK chan bool) {
 	c := exec.Command(cmdName)
 
 	// preparing for stdout/stderr msg
-	var out bytes.Buffer
-	c.Stdout = &out
+	c.Stdout = os.Stdout
 
-	// with Start() there is no chance to monitor the return value...
-	if err := c.Start(); err != nil {
-		errMsg := out.String()
+	var stderr bytes.Buffer
+	c.Stderr = &stderr
+
+	// with Run() there is no chance to monitor the return value...
+	if err := c.Run(); err != nil {
+		errMsg := stderr.String()
 		log.Printf("Error in starting eXtra service: '%s'; Err: %s; %s\n", exeCmd, errMsg, err)
 		//log.Printf("Err: %s; %s", errMsg, err)
 
